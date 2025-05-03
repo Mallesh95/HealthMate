@@ -4,20 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.*
-import com.example.healthifyai.ui.theme.HealthifyAITheme
+import androidx.compose.runtime.mutableStateOf
+import com.example.healthifyai.ui.theme.navigation.MainNavigation
 import com.example.healthifyai.ui.auth.SignUpScreen
-import com.example.healthifyai.ui.auth.HomeScreen
+import com.example.healthifyai.ui.theme.HealthifyAITheme
+import com.google.android.gms.auth.api.signin.*
 import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.*
 
 class MainActivity : ComponentActivity() {
-
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var auth: FirebaseAuth
 
@@ -26,9 +21,9 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         auth = FirebaseAuth.getInstance()
 
-        // 1) Configure Google Sign-In
+        // 1) Configure Google Sign‑In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id)) // from strings.xml
+            .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
@@ -36,7 +31,7 @@ class MainActivity : ComponentActivity() {
         // 2) Track sign‑in state
         val isSignedIn = mutableStateOf(auth.currentUser != null)
 
-        // 3) Launcher for Google Sign-In intent
+        // 3) Launcher for Google Sign‑In intent
         val launcher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -59,18 +54,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             HealthifyAITheme {
                 if (isSignedIn.value) {
-                    HomeScreen {
-                        // sign out both Firebase and Google
-                        auth.signOut()
-                        googleSignInClient.signOut()
-                        isSignedIn.value = false
-                    }
+                    MainNavigation(
+                        onSignOut = {
+                            // sign out both Firebase and Google
+                            auth.signOut()
+                            googleSignInClient.signOut()
+                            isSignedIn.value = false
+                        }
+                    )
                 } else {
                     SignUpScreen(
                         onAuthSuccess = { isSignedIn.value = true },
-                        onGoogleSignIn = {
-                            launcher.launch(googleSignInClient.signInIntent)
-                        }
+                        onGoogleSignIn = { launcher.launch(googleSignInClient.signInIntent) }
                     )
                 }
             }
